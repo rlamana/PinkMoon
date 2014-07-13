@@ -1,0 +1,9 @@
+body {
+  background-color: #eeeeee;
+}
+
+#world {
+  margin: 0.5em;
+  border: 1px solid #000;
+  background-color: #ffffff;
+}
