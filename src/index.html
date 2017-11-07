@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>PinkMoon</title>
+    <meta name="Description" content="" />
+    <meta name="Keywords"  content="" />
+
+    <link rel="stylesheet" type="text/css" media="screen,print" href="style.css" />
+</head>
+<body>
+    <canvas id='world'></canvas>
+    <div id="output" style="position: fixed; top:0; left:0;"></div>
+
+    <script type="text/javascript" src="soda/soda.class.js"></script>
+    <script type="text/javascript" src="soda/soda.box2d.js"></script>
+    <script type="text/javascript" src="soda/soda.js"></script>
+
+    <script type="text/javascript" src="pinkmoon.js"></script>
+
+    <script src="https://js.leapmotion.com/leap-0.6.4.js"></script>
+    <script type="text/javascript">
+        function concatData(id, data) {
+          return id + ": " + data + "<br>";
+        }
+
+        function getFingerName(fingerType) {
+          switch(fingerType) {
+            case 0:
+              return 'Thumb';
+            break;
+
+            case 1:
+              return 'Index';
+            break;
+
+            case 2:
+              return 'Middle';
+            break;
+
+            case 3:
+              return 'Ring';
+            break;
+
+            case 4:
+              return 'Pinky';
+            break;
+          }
+        }
+
+        function concatJointPosition(id, position) {
+          return id + ": " + position[0] + ", " + position[1] + ", " + position[2] + "<br>";
+        }
+
+        var output = document.getElementById('output');
+        var frameString = "", handString = "", fingerString = "";
+        var hand, finger;
+
+        // Leap.loop uses browser's requestAnimationFrame
+        var options = { enableGestures: true };
+
+        // Main Leap Loop
+        Leap.loop(options, function(frame) {
+          frameString = concatData("frame_id", frame.id);
+          frameString += concatData("num_hands", frame.hands.length);
+          frameString += concatData("num_fingers", frame.fingers.length);
+          frameString += "<br>";
+
+          // Showcase some new V2 features
+          for (var i = 0, len = frame.hands.length; i < len; i++) {
+            hand = frame.hands[i];
+            //handString = concatData("palm position", hand.palmPosition);
+            handString = Math.floor(hand.palmPosition[0]);
+            frameString += handString;
+
+            window.palmHeight = Math.floor(hand.palmPosition[1]);
+          }
+
+          output.innerHTML = frameString;
+
+        });
+
+    </script>
+</body>
+</html>

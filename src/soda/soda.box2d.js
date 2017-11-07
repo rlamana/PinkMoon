@@ -27,14 +27,14 @@
 var ProtoClass = {
     create: function() {
         var parent = null, properties = $A(arguments);
-        if (Object.isFunction(properties[0]))
+        if (Obj.isFunction(properties[0]))
             parent = properties.shift();
 
         function klass() {
             this.initialize.apply(this, arguments);
         }
 
-        Object.extend(klass, ProtoClass.Methods);
+        Obj.extend(klass, ProtoClass.Methods);
         klass.superclass = parent;
         klass.subclasses = [];
 
@@ -62,18 +62,18 @@ var ProtoClass = {
 ProtoClass.Methods = {
     addMethods: function(source) {
         var ancestor   = this.superclass && this.superclass.prototype;
-        var properties = Object.keys(source);
+        var properties = Obj.keys(source);
 
-        if (!Object.keys({
+        if (!Obj.keys({
             toString: true
         }).length)
             properties.push("toString", "valueOf");
 
         for (var i = 0, length = properties.length; i < length; i++) {
             var property = properties[i], value = source[property];
-            if (ancestor && Object.isFunction(value) &&
+            if (ancestor && Obj.isFunction(value) &&
                 value.argumentNames().first() == "$super") {
-                var method = value, value = Object.extend((function(m) {
+                var method = value, value = Obj.extend((function(m) {
                     return function() {
                         return ancestor[m].apply(this, arguments)
                     };
@@ -93,18 +93,19 @@ ProtoClass.Methods = {
     }
 };
 
-Object.extend = function(destination, source) {
+var Obj = {};
+Obj.extend = function(destination, source) {
     for (var property in source)
         destination[property] = source[property];
     return destination;
 };
 
-Object.extend(Object, {
+Obj.extend(Obj, {
     inspect: function(object) {
         try {
-            if (Object.isUndefined(object)) return 'undefined';
+            if (Obj.isUndefined(object)) return 'undefined';
             if (object === null) return 'null';
-            return object.inspect ? object.inspect() : String(object);
+            return Obj.inspect ? Obj.inspect() : String(object);
         } catch (e) {
             if (e instanceof RangeError) return '...';
             throw e;
@@ -119,17 +120,17 @@ Object.extend(Object, {
             case 'unknown':
                 return;
             case 'boolean':
-                return object.toString();
+                return Obj.toString();
         }
 
         if (object === null) return 'null';
-        if (object.toJSON) return object.toJSON();
-        if (Object.isElement(object)) return;
+        if (Obj.toJSON) return Obj.toJSON();
+        if (Obj.isElement(object)) return;
 
         var results = [];
         for (var property in object) {
-            var value = Object.toJSON(object[property]);
-            if (!Object.isUndefined(value))
+            var value = Obj.toJSON(object[property]);
+            if (!Obj.isUndefined(value))
                 results.push(property.toJSON() + ': ' + value);
         }
 
@@ -141,7 +142,7 @@ Object.extend(Object, {
     },
 
     toHTML: function(object) {
-        return object && object.toHTML ? object.toHTML() : String.interpret(object);
+        return object && Obj.toHTML ? Obj.toHTML() : String.interpret(object);
     },
 
     keys: function(object) {
@@ -159,11 +160,11 @@ Object.extend(Object, {
     },
 
     clone: function(object) {
-        return Object.extend({ }, object);
+        return Obj.extend({ }, object);
     },
 
     isElement: function(object) {
-        return object && object.nodeType == 1;
+        return object && Obj.nodeType == 1;
     },
 
     isArray: function(object) {
@@ -203,7 +204,7 @@ function $A(iterable) {
 if (WebKit = navigator.userAgent.indexOf('AppleWebKit/') > -1) {
     $A = function(iterable) {
         if (!iterable) return [];
-        if (!(Object.isFunction(iterable) && iterable == '[object NodeList]') &&
+        if (!(Obj.isFunction(iterable) && iterable == '[object NodeList]') &&
             iterable.toArray) return iterable.toArray();
         var length = iterable.length || 0, results = new Array(length);
         while (length--) results[length] = iterable[length];
@@ -301,7 +302,7 @@ b2Settings.b2Assert = function(a)
 // b2Vec2 has no constructor so that it
 // can be placed in a union.
 var b2Vec2 = ProtoClass.create();
-b2Vec2.prototype = 
+b2Vec2.prototype =
 {
     initialize: function(x_, y_) {
         this.x=x_;
@@ -448,7 +449,7 @@ b2Vec2.Make = function(x_, y_)
 
 
 var b2Mat22 = ProtoClass.create();
-b2Mat22.prototype = 
+b2Mat22.prototype =
 {
     initialize: function(angle, c1, c2)
     {
@@ -807,7 +808,7 @@ b2Math.tempMat = new b2Mat22();
 
 // A manifold for two touching convex shapes.
 var b2AABB = ProtoClass.create();
-b2AABB.prototype = 
+b2AABB.prototype =
 {
     IsValid: function(){
         //var d = b2Math.SubtractVV(this.maxVertex, this.minVertex);
@@ -938,7 +939,7 @@ b2BoundValues.prototype = {
 
 
 var b2Pair = ProtoClass.create();
-b2Pair.prototype = 
+b2Pair.prototype =
 {
 
 
@@ -1009,7 +1010,7 @@ b2Pair.e_pairFinal = 0x0004;
 
 
 var b2PairCallback = ProtoClass.create();
-b2PairCallback.prototype = 
+b2PairCallback.prototype =
 {
     //virtual ~b2PairCallback() {}
 
@@ -1079,7 +1080,7 @@ b2BufferedPair.prototype = {
 
 
 var b2PairManager = ProtoClass.create();
-b2PairManager.prototype = 
+b2PairManager.prototype =
 {
     //public:
     initialize: function(){
@@ -1481,7 +1482,7 @@ Bullet (http:/www.bulletphysics.com).
 //   worlds (use a multi-SAP instead), it is not great for large objects.
 
 var b2BroadPhase = ProtoClass.create();
-b2BroadPhase.prototype = 
+b2BroadPhase.prototype =
 {
     //public:
     initialize: function(worldAABB, callback){
@@ -3097,7 +3098,7 @@ b2Collision.b2TestOverlap = function(a, b)
 
 // We use contact ids to facilitate warm starting.
 var Features = ProtoClass.create();
-Features.prototype = 
+Features.prototype =
 {
     //
     set_referenceFace: function(value){
@@ -3160,7 +3161,7 @@ Features.prototype =
 
 // We use contact ids to facilitate warm starting.
 var b2ContactID = ProtoClass.create();
-b2ContactID.prototype = 
+b2ContactID.prototype =
 {
     initialize: function(){
         // initialize instance variables for references
@@ -3213,7 +3214,7 @@ b2ContactID.prototype =
 
 // We use contact ids to facilitate warm starting.
 var b2ContactPoint = ProtoClass.create();
-b2ContactPoint.prototype = 
+b2ContactPoint.prototype =
 {
     position: new b2Vec2(),
     separation: null,
@@ -3248,7 +3249,7 @@ b2ContactPoint.prototype =
 
 
 var b2Distance = ProtoClass.create();
-b2Distance.prototype = 
+b2Distance.prototype =
 {
 
     // GJK using Voronoi regions (Christer Ericson) and region selection
@@ -3583,7 +3584,7 @@ b2Distance.g_GJK_Iterations = 0;
 
 // A manifold for two touching convex shapes.
 var b2Manifold = ProtoClass.create();
-b2Manifold.prototype = 
+b2Manifold.prototype =
 {
     initialize: function(){
         this.points = new Array(b2Settings.b2_maxManifoldPoints);
@@ -3618,7 +3619,7 @@ b2Manifold.prototype =
 
 // A manifold for two touching convex shapes.
 var b2OBB = ProtoClass.create();
-b2OBB.prototype = 
+b2OBB.prototype =
 {
     R: new b2Mat22(),
     center: new b2Vec2(),
@@ -3701,7 +3702,7 @@ b2Proxy.prototype = {
 
 
 var ClipVertex = ProtoClass.create();
-ClipVertex.prototype = 
+ClipVertex.prototype =
 {
     v: new b2Vec2(),
     id: new b2ContactID(),
@@ -3742,7 +3743,7 @@ ClipVertex.prototype =
 // Shapes are created automatically when a body is created.
 // Client code does not normally interact with shapes.
 var b2Shape = ProtoClass.create();
-b2Shape.prototype = 
+b2Shape.prototype =
 {
     TestPoint: function(p){
         return false
@@ -4082,7 +4083,7 @@ b2Shape.PolyCentroid = function(vs, count, out)
 
 
 var b2ShapeDef = ProtoClass.create();
-b2ShapeDef.prototype = 
+b2ShapeDef.prototype =
 {
     initialize: function()
     {
@@ -4192,8 +4193,8 @@ b2ShapeDef.prototype =
 
 
 var b2BoxDef = ProtoClass.create();
-Object.extend(b2BoxDef.prototype, b2ShapeDef.prototype);
-Object.extend(b2BoxDef.prototype, 
+Obj.extend(b2BoxDef.prototype, b2ShapeDef.prototype);
+Obj.extend(b2BoxDef.prototype,
 {
     initialize: function()
     {
@@ -4242,8 +4243,8 @@ Object.extend(b2BoxDef.prototype,
 
 
 var b2CircleDef = ProtoClass.create();
-Object.extend(b2CircleDef.prototype, b2ShapeDef.prototype);
-Object.extend(b2CircleDef.prototype, 
+Obj.extend(b2CircleDef.prototype, b2ShapeDef.prototype);
+Obj.extend(b2CircleDef.prototype,
 {
     initialize: function()
     {
@@ -4292,8 +4293,8 @@ Object.extend(b2CircleDef.prototype,
 
 
 var b2CircleShape = ProtoClass.create();
-Object.extend(b2CircleShape.prototype, b2Shape.prototype);
-Object.extend(b2CircleShape.prototype, 
+Obj.extend(b2CircleShape.prototype, b2Shape.prototype);
+Obj.extend(b2CircleShape.prototype,
 {
     TestPoint: function(p){
         //var d = b2Math.SubtractVV(p, this.m_position);
@@ -4491,7 +4492,7 @@ Object.extend(b2CircleShape.prototype,
 
 
 var b2MassData = ProtoClass.create();
-b2MassData.prototype = 
+b2MassData.prototype =
 {
     mass: 0.0,
     center: new b2Vec2(0,0),
@@ -4528,8 +4529,8 @@ b2MassData.prototype =
 
 
 var b2PolyDef = ProtoClass.create();
-Object.extend(b2PolyDef.prototype, b2ShapeDef.prototype);
-Object.extend(b2PolyDef.prototype, 
+Obj.extend(b2PolyDef.prototype, b2ShapeDef.prototype);
+Obj.extend(b2PolyDef.prototype,
 {
     initialize: function()
     {
@@ -4593,8 +4594,8 @@ Object.extend(b2PolyDef.prototype,
 // some collision algorithms.
 
 var b2PolyShape = ProtoClass.create();
-Object.extend(b2PolyShape.prototype, b2Shape.prototype);
-Object.extend(b2PolyShape.prototype, 
+Obj.extend(b2PolyShape.prototype, b2Shape.prototype);
+Obj.extend(b2PolyShape.prototype,
 {
     TestPoint: function(p){
 
@@ -5082,7 +5083,7 @@ b2PolyShape.tAbsR = new b2Mat22();
 // of the center of mass position. The center of mass may
 // be offset from the body's origin.
 var b2Body = ProtoClass.create();
-b2Body.prototype = 
+b2Body.prototype =
 {
     // Set the position of the body's origin and rotation (radians).
     // This breaks any contacts and wakes the other bodies.
@@ -5548,7 +5549,7 @@ b2Body.e_destroyFlag = 0x0020;
 
 
 var b2BodyDef = ProtoClass.create();
-b2BodyDef.prototype = 
+b2BodyDef.prototype =
 {
     initialize: function()
     {
@@ -5620,7 +5621,7 @@ b2BodyDef.prototype =
 
 
 var b2CollisionFilter = ProtoClass.create();
-b2CollisionFilter.prototype = 
+b2CollisionFilter.prototype =
 {
 
     // Return true if contact calculations should be performed between these two shapes.
@@ -5741,7 +5742,7 @@ Baumgarte method in performance critical scenarios.
 
 
 var b2Island = ProtoClass.create();
-b2Island.prototype = 
+b2Island.prototype =
 {
     initialize: function(bodyCapacity, contactCapacity, jointCapacity, allocator)
     {
@@ -5991,7 +5992,7 @@ b2Island.m_positionIterationCount = 0;
 
 
 var b2TimeStep = ProtoClass.create();
-b2TimeStep.prototype = 
+b2TimeStep.prototype =
 {
     dt: null,
     inv_dt: null,
@@ -6021,7 +6022,7 @@ b2TimeStep.prototype =
 
 
 var b2ContactNode = ProtoClass.create();
-b2ContactNode.prototype = 
+b2ContactNode.prototype =
 {
     other: null,
     contact: null,
@@ -6060,7 +6061,7 @@ b2ContactNode.prototype =
 
 
 var b2Contact = ProtoClass.create();
-b2Contact.prototype = 
+b2Contact.prototype =
 {
     GetManifolds: function(){
         return null
@@ -6259,7 +6260,7 @@ b2Contact.s_initialized = false;
 
 
 var b2ContactConstraint = ProtoClass.create();
-b2ContactConstraint.prototype = 
+b2ContactConstraint.prototype =
 {
     initialize: function(){
         // initialize instance variables for references
@@ -6305,7 +6306,7 @@ b2ContactConstraint.prototype =
 
 
 var b2ContactConstraintPoint = ProtoClass.create();
-b2ContactConstraintPoint.prototype = 
+b2ContactConstraintPoint.prototype =
 {
     localAnchor1: new b2Vec2(),
     localAnchor2: new b2Vec2(),
@@ -6344,7 +6345,7 @@ b2ContactConstraintPoint.prototype =
 
 
 var b2ContactRegister = ProtoClass.create();
-b2ContactRegister.prototype = 
+b2ContactRegister.prototype =
 {
     createFcn: null,
     destroyFcn: null,
@@ -6377,7 +6378,7 @@ b2ContactRegister.prototype =
 
 
 var b2ContactSolver = ProtoClass.create();
-b2ContactSolver.prototype = 
+b2ContactSolver.prototype =
 {
     initialize: function(contacts, contactCount, allocator){
         // initialize instance variables for references
@@ -6914,8 +6915,8 @@ b2ContactSolver.prototype =
 
 
 var b2CircleContact = ProtoClass.create();
-Object.extend(b2CircleContact.prototype, b2Contact.prototype);
-Object.extend(b2CircleContact.prototype, 
+Obj.extend(b2CircleContact.prototype, b2Contact.prototype);
+Obj.extend(b2CircleContact.prototype,
 {
 
     initialize: function(s1, s2) {
@@ -7247,8 +7248,8 @@ b2Conservative.Conservative = function(shape1, shape2){
 
 
 var b2NullContact = ProtoClass.create();
-Object.extend(b2NullContact.prototype, b2Contact.prototype);
-Object.extend(b2NullContact.prototype, 
+Obj.extend(b2NullContact.prototype, b2Contact.prototype);
+Obj.extend(b2NullContact.prototype,
 {
     initialize: function(s1, s2) {
         // The constructor for b2Contact
@@ -7315,8 +7316,8 @@ Object.extend(b2NullContact.prototype,
 
 
 var b2PolyAndCircleContact = ProtoClass.create();
-Object.extend(b2PolyAndCircleContact.prototype, b2Contact.prototype);
-Object.extend(b2PolyAndCircleContact.prototype, {
+Obj.extend(b2PolyAndCircleContact.prototype, b2Contact.prototype);
+Obj.extend(b2PolyAndCircleContact.prototype, {
 
 
     initialize: function(s1, s2) {
@@ -7419,8 +7420,8 @@ b2PolyAndCircleContact.Destroy = function(contact, allocator){
 
 
 var b2PolyContact = ProtoClass.create();
-Object.extend(b2PolyContact.prototype, b2Contact.prototype);
-Object.extend(b2PolyContact.prototype, 
+Obj.extend(b2PolyContact.prototype, b2Contact.prototype);
+Obj.extend(b2PolyContact.prototype,
 {
 
     initialize: function(s1, s2) {
@@ -7583,8 +7584,8 @@ b2PolyContact.Destroy = function(contact, allocator){
 
 
 var b2ContactManager = ProtoClass.create();
-Object.extend(b2ContactManager.prototype, b2PairCallback.prototype);
-Object.extend(b2ContactManager.prototype, 
+Obj.extend(b2ContactManager.prototype, b2PairCallback.prototype);
+Obj.extend(b2ContactManager.prototype,
 {
     initialize: function(){
         // The constructor for b2PairCallback
@@ -7920,7 +7921,7 @@ Object.extend(b2ContactManager.prototype,
 
 
 var b2World = ProtoClass.create();
-b2World.prototype = 
+b2World.prototype =
 {
     initialize: function(worldAABB, gravity, doSleep){
         // initialize instance variables for references
@@ -8447,7 +8448,7 @@ b2World.s_enableWarmStarting = 1;
 
 
 var b2WorldListener = ProtoClass.create();
-b2WorldListener.prototype = 
+b2WorldListener.prototype =
 {
 
     // If a body is destroyed, then any joints attached to it are also destroyed.
@@ -8498,7 +8499,7 @@ b2WorldListener.b2_destroyBody = 1;
 
 
 var b2JointNode = ProtoClass.create();
-b2JointNode.prototype = 
+b2JointNode.prototype =
 {
 
     other: null,
@@ -8532,7 +8533,7 @@ b2JointNode.prototype =
 
 
 var b2Joint = ProtoClass.create();
-b2Joint.prototype = 
+b2Joint.prototype =
 {
     GetType: function(){
         return this.m_type;
@@ -8742,7 +8743,7 @@ b2Joint.e_equalLimits = 3;
 
 
 var b2JointDef = ProtoClass.create();
-b2JointDef.prototype = 
+b2JointDef.prototype =
 {
 
     initialize: function()
@@ -8788,8 +8789,8 @@ b2JointDef.prototype =
 //   = invMass1 + invI1 * cross(r1, u)^2 + invMass2 + invI2 * cross(r2, u)^2
 
 var b2DistanceJoint = ProtoClass.create();
-Object.extend(b2DistanceJoint.prototype, b2Joint.prototype);
-Object.extend(b2DistanceJoint.prototype, 
+Obj.extend(b2DistanceJoint.prototype, b2Joint.prototype);
+Obj.extend(b2DistanceJoint.prototype,
 {
     //--------------- Internals Below -------------------
 
@@ -9048,8 +9049,8 @@ Object.extend(b2DistanceJoint.prototype,
 
 
 var b2DistanceJointDef = ProtoClass.create();
-Object.extend(b2DistanceJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2DistanceJointDef.prototype, 
+Obj.extend(b2DistanceJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2DistanceJointDef.prototype,
 {
     initialize: function()
     {
@@ -9098,7 +9099,7 @@ Object.extend(b2DistanceJointDef.prototype,
 
 
 var b2Jacobian = ProtoClass.create();
-b2Jacobian.prototype = 
+b2Jacobian.prototype =
 {
     linear1: new b2Vec2(),
     angular1: null,
@@ -9153,8 +9154,8 @@ b2Jacobian.prototype =
 
 
 var b2GearJoint = ProtoClass.create();
-Object.extend(b2GearJoint.prototype, b2Joint.prototype);
-Object.extend(b2GearJoint.prototype, 
+Obj.extend(b2GearJoint.prototype, b2Joint.prototype);
+Obj.extend(b2GearJoint.prototype,
 {
     GetAnchor1: function(){
         //return this.m_body1.m_position + b2MulMV(this.m_body1.m_R, this.m_localAnchor1);
@@ -9472,8 +9473,8 @@ Object.extend(b2GearJoint.prototype,
 // a fixed body (which must be body1 on those joints).
 
 var b2GearJointDef = ProtoClass.create();
-Object.extend(b2GearJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2GearJointDef.prototype, 
+Obj.extend(b2GearJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2GearJointDef.prototype,
 {
     initialize: function()
     {
@@ -9519,8 +9520,8 @@ Object.extend(b2GearJointDef.prototype,
 // w k % (rx i + ry j) = w * (-ry i + rx j)
 
 var b2MouseJoint = ProtoClass.create();
-Object.extend(b2MouseJoint.prototype, b2Joint.prototype);
-Object.extend(b2MouseJoint.prototype, 
+Obj.extend(b2MouseJoint.prototype, b2Joint.prototype);
+Obj.extend(b2MouseJoint.prototype,
 {
     GetAnchor1: function(){
         return this.m_target;
@@ -9750,8 +9751,8 @@ Object.extend(b2MouseJoint.prototype,
 
 
 var b2MouseJointDef = ProtoClass.create();
-Object.extend(b2MouseJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2MouseJointDef.prototype, 
+Obj.extend(b2MouseJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2MouseJointDef.prototype,
 {
     initialize: function()
     {
@@ -9822,8 +9823,8 @@ Object.extend(b2MouseJointDef.prototype,
 
 
 var b2PrismaticJoint = ProtoClass.create();
-Object.extend(b2PrismaticJoint.prototype, b2Joint.prototype);
-Object.extend(b2PrismaticJoint.prototype, 
+Obj.extend(b2PrismaticJoint.prototype, b2Joint.prototype);
+Obj.extend(b2PrismaticJoint.prototype,
 {
     GetAnchor1: function(){
         var b1 = this.m_body1;
@@ -10483,8 +10484,8 @@ Object.extend(b2PrismaticJoint.prototype,
 
 
 var b2PrismaticJointDef = ProtoClass.create();
-Object.extend(b2PrismaticJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2PrismaticJointDef.prototype, 
+Obj.extend(b2PrismaticJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2PrismaticJointDef.prototype,
 {
     initialize: function()
     {
@@ -10542,8 +10543,8 @@ Object.extend(b2PrismaticJointDef.prototype,
 
 
 var b2PulleyJoint = ProtoClass.create();
-Object.extend(b2PulleyJoint.prototype, b2Joint.prototype);
-Object.extend(b2PulleyJoint.prototype, 
+Obj.extend(b2PulleyJoint.prototype, b2Joint.prototype);
+Obj.extend(b2PulleyJoint.prototype,
 {
     GetAnchor1: function(){
         //return this.m_body1->m_position + b2Mul(this.m_body1->m_R, this.m_localAnchor1);
@@ -11166,8 +11167,8 @@ b2PulleyJoint.b2_minPulleyLength = b2Settings.b2_lengthUnitsPerMeter;
 // useful to prevent one side of the pulley hitting the top.
 
 var b2PulleyJointDef = ProtoClass.create();
-Object.extend(b2PulleyJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2PulleyJointDef.prototype, 
+Obj.extend(b2PulleyJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2PulleyJointDef.prototype,
 {
     initialize: function()
     {
@@ -11242,8 +11243,8 @@ Object.extend(b2PulleyJointDef.prototype,
 // K = invI1 + invI2
 
 var b2RevoluteJoint = ProtoClass.create();
-Object.extend(b2RevoluteJoint.prototype, b2Joint.prototype);
-Object.extend(b2RevoluteJoint.prototype, 
+Obj.extend(b2RevoluteJoint.prototype, b2Joint.prototype);
+Obj.extend(b2RevoluteJoint.prototype,
 {
     GetAnchor1: function(){
         var tMat = this.m_body1.m_R;
@@ -11734,8 +11735,8 @@ b2RevoluteJoint.tImpulse = new b2Vec2();
 
 
 var b2RevoluteJointDef = ProtoClass.create();
-Object.extend(b2RevoluteJointDef.prototype, b2JointDef.prototype);
-Object.extend(b2RevoluteJointDef.prototype, 
+Obj.extend(b2RevoluteJointDef.prototype, b2JointDef.prototype);
+Obj.extend(b2RevoluteJointDef.prototype,
 {
     initialize: function()
     {
@@ -11765,4 +11766,3 @@ Object.extend(b2RevoluteJointDef.prototype,
     enableLimit: null,
     enableMotor: null
 });
-

@@ -27,7 +27,7 @@ var Soda =
 Soda.Physics = Class.extend
 ({
     engine: undefined,
-    
+
     /**
      * Set up the physical environement
      *
@@ -84,8 +84,8 @@ Soda.Entity = Class.extend
      * @public
      * @constructs
      */
-    init:   function(world){},
-    
+    init: function(world){},
+
     /**
      * Method called when 'update' event is triggered by the engine.
      *
@@ -100,12 +100,20 @@ Soda.Entity = Class.extend
      * @param {World} world The World object where the entity is included
      * @public
      */
-    draw:   function(world){}
+    draw: function(world){},
+
+    /**
+     * Method called when 'resize' event is triggered by the engine.
+     *
+     * @param {World} world The World object where the entity is included
+     * @public
+     */
+    resize: function(world){}
 });
 
 /**
  * Solid Class
- * 
+ *
  * @lends Soda.Solid
  * @memberOf Soda
  */
@@ -138,6 +146,14 @@ Soda.Solid = Soda.Entity.extend
     draw: function(world){},
 
     /**
+     * Inherited from {@link Soda.Entity.resize}.
+     *
+     * @param {World} world The World object where the entity is included
+     * @public
+     */
+    resize: function(world){},
+
+    /**
      * Draws Box2D Body shape for debugging purposes.
      *
      * @public
@@ -146,7 +162,10 @@ Soda.Solid = Soda.Entity.extend
     {
         var context = world.context;
 
-        if (this.body == undefined) return;
+        if (typeof this.body === 'undefined' || !this.body.GetShapeList) {
+            console.warn('Solid\'s body not ready');
+            return;
+        }
 
         for (var shape = this.body.GetShapeList();
                  shape != null;
@@ -174,7 +193,7 @@ Soda.Solid = Soda.Entity.extend
                 context.stroke();
                 context.fill();
             world.context.restore();
-            
+
 
 
             /*context.beginPath();
@@ -201,7 +220,7 @@ Soda.Solid = Soda.Entity.extend
 
     /**
      * Get a human-readable representation of this {@link Soda.Solid}
-     * 
+     *
      * @public
      * @return {string} String representation of the solid entity.
      */
@@ -209,10 +228,10 @@ Soda.Solid = Soda.Entity.extend
     {
         return "Solid";
     },
-    
+
     /**
      * Body object from Box2D engine.
-     * 
+     *
      * @property {b2BodyDef} body Body object from Box2D engine.
      * @default undefined
      * @public
@@ -269,13 +288,15 @@ Soda.World = Class.extend
      */
     init: function(options)
     {
+        var resize;
+
         // Games Parameters
         this.fps = 60;
         this.width = 960;
         this.height = 640;
 
         // Canvas Configuration
-        this.canvas  = $("#world").get(0);
+        this.canvas = options.canvas;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
@@ -286,6 +307,17 @@ Soda.World = Class.extend
 
         // Physics Engine Box2D
         this.physics = new Soda.Physics();
+
+        resize = function() {
+            this.width = this.canvas.width = window.innerWidth;
+            this.height = this.canvas.height = window.innerHeight;
+            this._resized = true;
+            this.render();
+        }.bind(this);
+        resize();
+
+        // Resize the canvas to fill browser window dynamically
+        window.addEventListener('resize', resize, false);
     },
 
     /**
@@ -303,15 +335,14 @@ Soda.World = Class.extend
         {
             var entity = this._added_entities[i];
             this._entities.push(entity);
-            
+
             if (entity.update)
                 entity.update(this);
 
             // Si es un cuerpo fisico, lo añadimos al motor fisicas
-            if ((entity instanceof Soda.Solid) && (entity.body != undefined))
-            {
+            if ((entity instanceof Soda.Solid) && (typeof entity.bodyDef !== 'undefined')) {
                 // CreateBody no referencia, copia. Por eso se sobreescribe entity.body
-                entity.body = this.physics.engine.CreateBody(entity.body); // <--- Creamos el objeto en el motor Box2D
+                entity.body = this.physics.engine.CreateBody(entity.bodyDef); // <--- Creamos el objeto en el motor Box2D
             }
         }
         this._added_entities = [];
@@ -331,7 +362,12 @@ Soda.World = Class.extend
 
             if (entity.draw)
                 entity.draw(this);
+
+            if (entity.resize)
+                entity.resize(this);
         }
+
+        this._resized = false; // Reset resized state
     },
 
     /**
@@ -376,7 +412,13 @@ Soda.World = Class.extend
      * Queue of entities to delete.
      * @private
      */
-    _deleted_entities: []
+    _deleted_entities: [],
+
+    /**
+     * Whether or not a resize event has been triggered.
+     * @private
+     */
+    _resized: true
 
 });
 
@@ -398,7 +440,3 @@ var Soda = window.Soda =
     _worlds: [];
 };
 */
-
-/* Prueba de la herencia multiple: */
-/*var Nieto = Box2DEntity.extend({}).extend({});
-alert((new Nieto) instanceof Box2DEntity);*/
